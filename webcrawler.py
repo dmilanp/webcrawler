@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 
+from bs4 import BeautifulSoup
 import eventlet
 from eventlet.green import urllib2
 import validators
@@ -45,11 +46,12 @@ def crawl(url, visited, pool, retries_left):
     data = None
     with eventlet.Timeout(FETCH_TIMEOUT_SECONDS, False):
         data = urllib2.urlopen(url).read()
+
     if not data:
         logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(url, FETCH_TIMEOUT_SECONDS))
         pool.spawn_n(crawl, url, visited, pool, retries_left)
     else:
-        logging.debug(data)
+        soup = BeautifulSoup(data, 'html.parser')
 
 
 if __name__ == '__main__':
