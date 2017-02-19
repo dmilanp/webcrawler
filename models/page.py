@@ -13,14 +13,14 @@ class Page:
     FETCH_TIMEOUT_SECONDS = 4
 
     def __init__(self, url):
-        self.url = url
+        self.url = self.ensure_url_protocol(url)
         self.resource = self.extract_resource_from_url(url)
         self._assets = []
         self._links = []
         self._html = None
 
     def has_valid_url(self):
-        return self.validate_url(self.url)
+        return self.is_valid_url(self.url)
 
     @staticmethod
     def ensure_url_protocol(url):
@@ -31,7 +31,7 @@ class Page:
         return url
 
     @staticmethod
-    def validate_url(url):
+    def is_valid_url(url):
         """Checks if url is valid"""
         if not validators.url(url):
             return False
@@ -62,6 +62,25 @@ class Page:
 
     @property
     def html(self):
+        # if retries_left == 0:
+        #     logging.warning("Ran out of attempts for url {}".format(page.url))
+        #     return
+        # retries_left -= 1
+        #
+        # data = None
+        # with eventlet.Timeout(FETCH_TIMEOUT_SECONDS, False):
+        #     data = urllib2.urlopen(page.url).read()
+        #
+        # if not data:
+        #     logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(page.url,
+        #                                                                                    FETCH_TIMEOUT_SECONDS))
+        #     pool.spawn_n(crawl, page, visited, pool, retries_left)
+        # else:
+        #     page.assets = extract_assets_from_html(data)
+        #
+        #
+        #     for link in links:
+        #         pool.spawn_n(crawl, link, visited, pool, MAX_RETRIES)
         return self._html
 
 

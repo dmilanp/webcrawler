@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-python webcrawler [URL] 
+python webcrawler [--max-threads MAX_THREADS] URL
 ```
 
 ## Help

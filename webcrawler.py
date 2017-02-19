@@ -23,7 +23,6 @@ def print_sitemap(pages):
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
     logging.debug("Crawling {}".format(page.url))
-
     links = page.internal_links
 
     for link in links:
@@ -35,11 +34,12 @@ def crawl(page, visited, pool):
 
 
 if __name__ == '__main__':
-    # Get url and validate
+    # Get arguments
     url = args.url
     max_threads = args.max_threads
-    root_page = Page(url)
 
+    # Set root URL
+    root_page = Page(url)
     if not root_page.has_valid_url():
         logging.error("Url {} is not valid".format(root_page.url))
         exit(1)
