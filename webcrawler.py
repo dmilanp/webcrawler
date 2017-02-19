@@ -2,10 +2,9 @@ import argparse
 import logging
 import sys
 
-from bs4 import BeautifulSoup
 import eventlet
-from eventlet.green import urllib2
-import validators
+
+from models.page import Page
 
 
 parser = argparse.ArgumentParser(description='This script takes a url to crawl and outputs its site\'s map and a full '
@@ -16,53 +15,43 @@ args = parser.parse_args()
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-RETRIES = 1
-FETCH_TIMEOUT_SECONDS = 4
 
-def ensure_protocol_in_url(url):
-    """If protocol not provided fallback to http"""
-    if not (url.startswith('https://') or url.startswith('http://')):
-        logging.debug("Protocol not provided. Falling back to http.")
-        return "http://" + url
-    return url
+def print_sitemap(pages):
+    raise NotImplementedError
 
 
-def validate_url(url):
-    """Check if url is valid, exit otherwise"""
-    if not validators.url(url):
-        logging.error("URL provided ({}) is not valid.".format(url))
-        exit(1)
-
-
-def crawl(url, visited, pool, retries_left):
+def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
-    logging.debug("Crawling {}".format(url))
+    logging.debug("Crawling {}".format(page.url))
 
-    if retries_left == 0:
-        logging.warning("Ran out of attempts for url {}".format(url))
-        return
-    retries_left -= 1
+    links = page.internal_links
 
-    data = None
-    with eventlet.Timeout(FETCH_TIMEOUT_SECONDS, False):
-        data = urllib2.urlopen(url).read()
+    for link in links:
+        new_page = Page(link)
+        if new_page not in visited:
+            pool.spawn_n(crawl, new_page, visited, pool)
 
-    if not data:
-        logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(url, FETCH_TIMEOUT_SECONDS))
-        pool.spawn_n(crawl, url, visited, pool, retries_left)
-    else:
-        soup = BeautifulSoup(data, 'html.parser')
+    visited.add(page)
 
 
 if __name__ == '__main__':
     # Get url and validate
     url = args.url
     max_threads = args.max_threads
-    url = ensure_protocol_in_url(url)
-    validate_url(url)
+    root_page = Page(url)
+
+    if not root_page.has_valid_url():
+        logging.error("Url {} is not valid".format(root_page.url))
+        exit(1)
 
     # Perform crawling
     visited = set()
     pool = eventlet.GreenPool(size=max_threads)
-    crawl(url, visited, pool, RETRIES)
+    crawl(root_page, visited, pool)
     pool.waitall()
+
+    print_sitemap(visited)
+
+    for page in visited:
+        page.print_assets
+
