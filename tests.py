@@ -39,18 +39,19 @@ class TestPageClass(unittest.TestCase):
 
     def test_extract_path_from_url(self):
         self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com"), "")
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/#"), "/")
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com#hello"), "")
         self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/?q=1"), "/")
-        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello?world"), "/hello")
         self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello/world?q=1"), "/hello/world")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com"), "")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/?q=1"), "/")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/hello?world"), "/hello")
-        self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/hello/world?q=1"), "/hello/world")
+        self.assertEqual(Page.extract_path_from_url("https://www.yoyowallet.com/hello/world?q=1"), "/hello/world")
 
     def test_internal_links(self):
         p = Page("www.yoyowallet.com")
         p._html = self.html
-        self.assertSetEqual(p.get_internal_links, {"www.yoyowallet.com/jobs.html"})
+        self.assertSetEqual(p.get_internal_links, {"http://www.yoyowallet.com/jobs.html"})
 
     def test_assets(self):
         p = Page("www.yoyowallet.com")

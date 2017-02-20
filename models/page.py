@@ -1,7 +1,9 @@
 import logging
 from urlparse import urlparse
+import re
 
 from bs4 import BeautifulSoup
+import tldextract
 import eventlet
 from eventlet.green import urllib2
 import validators
@@ -16,6 +18,7 @@ class Page:
     MAX_RETRIES = 3
 
     def __init__(self, url):
+        # Always store url with scheme
         self.url = self.ensure_url_protocol(url)
         self.path = self.extract_path_from_url(url)
         self._assets = None
@@ -41,25 +44,31 @@ class Page:
         for asset in self.get_assets:
             print "\t", asset
 
+    def extract_internal_link(self, link):
+        tld = tldextract.extract(self.url)
+        # Links containing domain
+        if "{}.{}".format(tld.domain, tld.suffix) in link:
+            return Page.ensure_url_protocol(link)
+        # References to resource only
+        elif "http" not in link and re.match("[.a-zA-Z0-9-][/.a-zA-Z0-9-]*", link):
+            return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
+        else:
+            return None
+
     @property
     def get_internal_links(self):
         """Prints links to pages in same domain as self"""
         if not self._links:
-            def get_internal_link(tag):
-                link = tag.get('href')
-                if link:
-                    if urlparse(self.url).netloc in link:
-                        return link
-                    elif not self.is_valid_url(link):
-                        return urlparse(self.url).netloc + "/" + link
-                else:
-                    return None
-
             # Extract links
             soup = BeautifulSoup(self.html, 'html.parser')
             anchors = soup.find_all('a')
-            links = filter(None, map(get_internal_link, anchors))
-            self._links = set(links)
+            href = filter(None, map(lambda tag: tag.get('href'), anchors))
+            internal_links = filter(None, map(self.extract_internal_link, href))
+            # Work with fully qualified links, with scheme
+            links = map(Page.ensure_url_protocol, internal_links)
+            # Clean paths
+            output = map(lambda l: urlparse(l).scheme + "://" + urlparse(l).netloc + Page.extract_path_from_url(l), links)
+            self._links = set(output)
         return self._links
 
     @property

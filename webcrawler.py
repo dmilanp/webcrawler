@@ -24,6 +24,7 @@ def print_sitemap(url, pages):
 
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
+    logging.debug("Crawling {}".format(page.url))
     visited.add(page)
 
     try:
@@ -70,6 +71,6 @@ if __name__ == '__main__':
         print "\t", page.path
 
     # Print assets for each page
-    for page in visited:
-        page.print_assets()
+    # for page in visited:
+    #     page.print_assets()
 
