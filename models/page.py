@@ -95,6 +95,15 @@ class Page:
                 elif tag.name == "img" or tag.name == "script":
                     return tag.get('src')
 
+            def prepare_asset(asset):
+                if asset.startswith('www'):
+                    return self.ensure_url_protocol(asset)
+                elif asset.startswith('http'):
+                    return asset
+                elif asset.startswith('/'):
+                    asset = re.sub("^/", "", asset)
+                return "{}/{}".format(self.url, asset)
+
             # Extract assets
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
@@ -102,9 +111,7 @@ class Page:
             cleaned = map(lambda l: l.replace('../', ''), asset_links)
             cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
             output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
-            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http") or
-                                                   l.startswith("www")) else "/{}".format(l),
-                                   output)
+            formatted_output = map(prepare_asset, output)
             self._assets = set(formatted_output)
         return self._assets
 
