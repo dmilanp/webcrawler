@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import argparse
 import logging
 import sys
+import time
 
 import eventlet
 
@@ -26,12 +28,11 @@ def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
     logging.debug("Crawling {}".format(page.url))
     visited.add(page)
+    time.sleep(0.4)
 
     try:
         links = page.get_internal_links
     except eventlet.Timeout:
-        logging.debug("Raising timeout from webcrawler")
-
         page.retries_left -= 1
         if page.retries_left > 0:
             pool.spawn_n(crawl, page, visited, pool)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 from urlparse import urlparse
 import re
@@ -14,7 +15,7 @@ logging.getLogger(__name__)
 
 class Page:
 
-    FETCH_TIMEOUT_SECONDS = 4
+    FETCH_TIMEOUT_SECONDS = 8
     MAX_RETRIES = 3
 
     def __init__(self, url):
@@ -48,7 +49,10 @@ class Page:
         tld = tldextract.extract(self.url)
         # Links containing domain
         if "{}.{}".format(tld.domain, tld.suffix) in link and "mailto" not in link:
-            return Page.ensure_url_protocol(link)
+            link = Page.ensure_url_protocol(link)
+            # Clean multiple slashes
+            output = re.sub("http://[/]+", "http://", link)
+            return output
         # References to resource only
         elif "http" not in link and re.match("[.a-zA-Z0-9-][/.a-zA-Z0-9-]*", link):
             link = link.replace('../', '')
@@ -104,8 +108,12 @@ class Page:
                 except urllib2.HTTPError:
                     logging.debug("HTTP request failed for url {}".format(self.url))
                 except eventlet.Timeout as t:
-                    logging.debug("Raising timeout from page")
+                    logging.debug("Raising timeout crawling {}".format(self.url))
                     raise t
+                except urllib2.URLError:
+                    logging.debug("Error opening URL {}".format(self.url))
+                except:
+                    pass
             self._html = data
         return self._html
 
