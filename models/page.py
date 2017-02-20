@@ -41,7 +41,7 @@ class Page:
     def print_assets(self):
         """Prints links embedded in the following tags in its html: a, img, script, link"""
         print "\n", "Assets for {} :".format(self.url)
-        for asset in self.get_assets:
+        for asset in sorted(list(self.get_assets)):
             print "\t", asset
         print "\n"
 
@@ -101,7 +101,8 @@ class Page:
             cleaned = map(lambda l: l.replace('../', ''), asset_links)
             cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
             output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
-            self._assets = set(output)
+            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http")) else "/{}".format(l), output)
+            self._assets = set(formatted_output)
         return self._assets
 
     @property
