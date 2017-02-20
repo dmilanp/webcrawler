@@ -26,7 +26,6 @@ def print_sitemap(root_page, pages):
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
     logging.debug("Crawling {}".format(page.url))
-
     try:
         links = page.internal_links
     except eventlet.Timeout:
@@ -36,14 +35,17 @@ def crawl(page, visited, pool):
         pool.spawn_n(crawl, page, visited, pool)
         return
 
+    visited.add(page)
+
     for link in links:
         time.sleep(1)
         new_page = Page(link)
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
+        else:
+            logging.debug("Url {} already crawled. Skipping.".format(new_page.url))
 
-    visited.add(page)
-
+    page.print_assets()
 
 if __name__ == '__main__':
     # Get arguments
@@ -64,6 +66,6 @@ if __name__ == '__main__':
 
     print_sitemap(root_page, visited)
 
-    for page in visited:
-        page.print_assets
+    # for page in visited:
+    #     page.print_assets()
 
