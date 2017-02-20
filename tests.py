@@ -24,10 +24,12 @@ class TestPageClass(unittest.TestCase):
         self.assertEqual(Page("www.yoyowallet.com"), Page("www.yoyowallet.com"))
 
     def test_valid_urls(self):
+        # Valid urls
         self.assertTrue(Page("www.yoyowallet.com").has_valid_url())
         self.assertTrue(Page("http://www.yoyowallet.com").has_valid_url())
         self.assertTrue(Page("https://www.yoyowallet.com").has_valid_url())
-        self.assertTrue(Page("hello.bye").has_valid_url())
+
+        # Invalid urls
         self.assertFalse(Page("ftp://www.yoyowallet.com.1").has_valid_url())
         self.assertFalse(Page("www.yoyowallet.com.1").has_valid_url())
 
