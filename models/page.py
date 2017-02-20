@@ -15,7 +15,7 @@ logging.getLogger(__name__)
 
 class Page:
 
-    FETCH_TIMEOUT_SECONDS = 8
+    FETCH_TIMEOUT_SECONDS = 5
     MAX_RETRIES = 3
 
     def __init__(self, url):
@@ -54,8 +54,9 @@ class Page:
             output = re.sub("http://[/]+", "http://", link)
             return output
         # References to resource only
-        elif "http" not in link and re.match("[.a-zA-Z0-9-][/.a-zA-Z0-9-]*", link):
+        elif "http" not in link and re.match("[/.a-zA-Z0-9-]*", link) and "mailto" not in link:
             link = link.replace('../', '')
+            link = re.sub("^/", "", link)
             return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
         else:
             return None
@@ -94,7 +95,8 @@ class Page:
             assets = soup.find_all(is_asset)
             asset_links = filter(None, map(get_asset_link, assets))
             cleaned = map(lambda l: l.replace('../', ''), asset_links)
-            output = filter(lambda l: not l.startswith('?'), cleaned)
+            cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
+            output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
             self._assets = set(output)
         return self._assets
 
@@ -109,7 +111,7 @@ class Page:
                 except urllib2.HTTPError:
                     logging.debug("HTTP request failed for url {}".format(self.url))
                 except eventlet.Timeout as t:
-                    logging.debug("Raising timeout crawling {}".format(self.url))
+                    logging.debug("Timeout crawling {}. Retrying.".format(self.url))
                     raise t
                 except urllib2.URLError:
                     logging.debug("Error opening URL {}".format(self.url))

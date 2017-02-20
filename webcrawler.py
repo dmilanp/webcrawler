@@ -3,6 +3,7 @@ import argparse
 import logging
 import sys
 import time
+import random
 
 import eventlet
 
@@ -15,7 +16,7 @@ parser.add_argument('url', type=str, help='url to crawl')
 parser.add_argument('--max-threads', '-mt', type=int, default=10, help='maximum number of threads to perform crawling')
 args = parser.parse_args()
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 def print_sitemap(url, pages):
@@ -26,9 +27,9 @@ def print_sitemap(url, pages):
 
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
-    logging.debug("Crawling {}".format(page.url))
+    logging.info("Crawling {}".format(page.url))
     visited.add(page)
-    time.sleep(0.4)
+    time.sleep(random.random())
 
     try:
         links = page.get_internal_links
