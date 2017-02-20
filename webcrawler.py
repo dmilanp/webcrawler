@@ -65,7 +65,7 @@ if __name__ == '__main__':
     crawl(root_page, visited, pool)
     pool.waitall()
 
-    print_sitemap(root_page, visited)
+    print_sitemap(root_page, sorted(list(visited)))
 
     # for page in visited:
     #     page.print_assets()
