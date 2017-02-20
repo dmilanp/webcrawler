@@ -23,7 +23,15 @@ def print_sitemap(pages):
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
     logging.debug("Crawling {}".format(page.url))
-    links = page.internal_links
+
+    try:
+        links = page.internal_links
+    except eventlet.Timeout:
+        logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(page.url,
+                                                                                       Page.FETCH_TIMEOUT_SECONDS))
+        page.retries -= 1
+        pool.spawn_n(crawl, page, visited, pool)
+        return
 
     for link in links:
         new_page = Page(link)

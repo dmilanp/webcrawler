@@ -3,6 +3,7 @@ import re
 from urlparse import urlparse
 
 from bs4 import BeautifulSoup
+import eventlet
 from eventlet.green import urllib2
 import validators
 
@@ -13,6 +14,7 @@ logging.getLogger(__name__)
 class Page:
 
     FETCH_TIMEOUT_SECONDS = 4
+    MAX_RETRIES = 3
 
     def __init__(self, url):
         self.url = self.ensure_url_protocol(url)
@@ -20,6 +22,7 @@ class Page:
         self._assets = []
         self._links = []
         self._html = None
+        self.retries = Page.MAX_RETRIES
 
     def has_valid_url(self):
         return self.is_valid_url(self.url)
@@ -54,7 +57,8 @@ class Page:
             soup = BeautifulSoup(self.html, 'html.parser')
             domain = urlparse(self.url).netloc
             anchors = soup.find_all('a', href=re.compile(domain))
-            self._links = map(lambda anchor: anchor.href, anchors)
+            links = filter(None, map(lambda anchor: anchor.href, anchors))
+            self._links = links
         return self._links
 
     @property
@@ -77,7 +81,7 @@ class Page:
             # Get assets
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
-            asset_links = map(get_asset_link, assets)
+            asset_links = filter(None, map(get_asset_link, assets))
             self._links = asset_links
         return self._assets
 
@@ -86,25 +90,22 @@ class Page:
 
     @property
     def html(self):
-        # if retries_left == 0:
-        #     logging.warning("Ran out of attempts for url {}".format(page.url))
-        #     return
-        # retries_left -= 1
-        #
-        # data = None
-        # with eventlet.Timeout(FETCH_TIMEOUT_SECONDS, False):
-        #     data = urllib2.urlopen(page.url).read()
-        #
-        # if not data:
-        #     logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(page.url,
-        #                                                                                    FETCH_TIMEOUT_SECONDS))
-        #     pool.spawn_n(crawl, page, visited, pool, retries_left)
-        # else:
-        #     page.assets = extract_assets_from_html(data)
-        #
-        #
-        #     for link in links:
-        #         pool.spawn_n(crawl, link, visited, pool, MAX_RETRIES)
+        # Adhere to number of retries specified
+        if self.retries == 0:
+            logging.warning("Ran out of attempts for url {}".format(page.url))
+            self._html = ""
+            return self._html
+        self.retries -= 1
+
+        data = None
+        with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
+            data = urllib2.urlopen(self.url).read()
+
+        if data:
+            self._html = data
+        else:
+            self._html = ""
+
         return self._html
 
 
