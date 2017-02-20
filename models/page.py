@@ -46,12 +46,12 @@ class Page:
         print "\n"
 
     def extract_internal_link(self, link):
+        """If link is to same domain this returns it well formatted, otherwise returns None"""
         # Links containing domain
         if self.domain in link and "mailto" not in link:
             # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
             if not self.domain == Page(link).domain:
                 return None
-            # logging.debug("Link {} has domain {}".format(link, self.domain))
             link = Page.ensure_url_protocol(link)
             # Clean multiple slashes
             output = re.sub("http://[/]+", "http://", link)
@@ -60,7 +60,6 @@ class Page:
         elif "http" not in link and re.match("[/.a-zA-Z0-9-]*", link) and "mailto:" not in link and "tel:" not in link:
             link = link.replace('../', '')
             link = re.sub("^/", "", link)
-            # logging.debug("Link {} is a resource".format(link))
             return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
         else:
             return None
@@ -77,7 +76,8 @@ class Page:
             # Work with fully qualified links, with scheme
             links = map(Page.ensure_url_protocol, internal_links)
             # Clean paths
-            output = map(lambda l: urlparse(l).scheme + "://" + urlparse(l).netloc + Page.extract_path_from_url(l), links)
+            output = map(lambda l: urlparse(l).scheme + "://" + urlparse(l).netloc + Page.extract_path_from_url(l),
+                         links)
             self._links = set(output)
         return self._links
 
@@ -101,7 +101,8 @@ class Page:
             cleaned = map(lambda l: l.replace('../', ''), asset_links)
             cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
             output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
-            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http")) else "/{}".format(l), output)
+            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http")) else "/{}".format(l),
+                                   output)
             self._assets = set(formatted_output)
         return self._assets
 

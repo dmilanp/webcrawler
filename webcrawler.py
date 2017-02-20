@@ -14,7 +14,8 @@ parser = argparse.ArgumentParser(description='This script takes a url to crawl a
                                              'list of its assets.')
 parser.add_argument('url', type=str, help='url to crawl')
 parser.add_argument('--max-threads', '-mt', type=int, default=10, help='maximum number of threads to perform crawling')
-parser.add_argument('--soft', action="store_true", default=False, help='sleep a fraction of a second before crawling a new page')
+parser.add_argument('--soft', action="store_true", default=False, help='sleep a fraction of a second before crawling a '
+                                                                       'new page')
 args = parser.parse_args()
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -23,6 +24,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 url = args.url
 max_threads = args.max_threads
 soft = args.soft
+
 
 def print_sitemap(url, pages):
     print "\n", "Sitemap for {} :".format(url)
@@ -52,7 +54,7 @@ def crawl(page, visited, pool):
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
         else:
-            # Url already crawled. Skipping.
+            # Url already crawled.
             pass
 
     page.print_assets()
@@ -61,6 +63,7 @@ if __name__ == '__main__':
 
     if soft:
         logging.info("Soft mode enabled.")
+    logging.info("Using pool of {} threads.".format(max_threads))
 
     # Set root URL
     root_page = Page(url)
@@ -79,8 +82,3 @@ if __name__ == '__main__':
     for page in sorted(list(visited)):
         if page.path:
             print "\t", page.path
-
-    # Print assets for each page
-    # for page in visited:
-    #     page.print_assets()
-
