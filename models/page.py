@@ -22,6 +22,7 @@ class Page:
         # Always store url with scheme
         self.url = self.ensure_url_protocol(url)
         self.path = self.extract_path_from_url(url)
+        self.domain = self.domain_for(self.url)
         self._assets = None
         self._links = None
         self._html = None
@@ -34,8 +35,6 @@ class Page:
     def __eq__(self, other):
         return self.url == other.url
 
-
-
     def has_valid_url(self):
         return self.is_valid_url(self.url)
 
@@ -44,19 +43,24 @@ class Page:
         print "\n", "Assets for {} :".format(self.url)
         for asset in self.get_assets:
             print "\t", asset
+        print "\n"
 
     def extract_internal_link(self, link):
-        tld = tldextract.extract(self.url)
         # Links containing domain
-        if "{}.{}".format(tld.domain, tld.suffix) in link and "mailto" not in link:
+        if self.domain in link and "mailto" not in link:
+            # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
+            if not self.domain == Page(link).domain:
+                return None
+            # logging.debug("Link {} has domain {}".format(link, self.domain))
             link = Page.ensure_url_protocol(link)
             # Clean multiple slashes
             output = re.sub("http://[/]+", "http://", link)
             return output
         # References to resource only
-        elif "http" not in link and re.match("[/.a-zA-Z0-9-]*", link) and "mailto" not in link:
+        elif "http" not in link and re.match("[/.a-zA-Z0-9-]*", link) and "mailto:" not in link and "tel:" not in link:
             link = link.replace('../', '')
             link = re.sub("^/", "", link)
+            # logging.debug("Link {} is a resource".format(link))
             return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
         else:
             return None
@@ -119,6 +123,11 @@ class Page:
                     pass
             self._html = data
         return self._html
+
+    @staticmethod
+    def domain_for(url):
+        tld = tldextract.extract(url)
+        return "{}.{}".format(tld.domain, tld.suffix)
 
     @staticmethod
     def is_valid_url(url):
