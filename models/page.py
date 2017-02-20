@@ -30,6 +30,12 @@ class Page:
     def __eq__(self, other):
         return self.url == other.url
 
+    def is_valid_url(self, url):
+        """Checks if url is valid"""
+        if not validators.url(self.ensure_url_protocol(url)):
+            return False
+        return True
+
     def has_valid_url(self):
         return self.is_valid_url(self.url)
 
@@ -102,13 +108,6 @@ class Page:
         if not (url.startswith('https://') or url.startswith('http://')):
             return "http://" + url
         return url
-
-    @staticmethod
-    def is_valid_url(url):
-        """Checks if url is valid"""
-        if not validators.url(url):
-            return False
-        return True
 
     @staticmethod
     def extract_path_from_url(url):
