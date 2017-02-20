@@ -1,4 +1,6 @@
 import logging
+import re
+from urlparse import urlparse
 
 from bs4 import BeautifulSoup
 from eventlet.green import urllib2
@@ -14,7 +16,7 @@ class Page:
 
     def __init__(self, url):
         self.url = self.ensure_url_protocol(url)
-        self.resource = self.extract_resource_from_url(url)
+        self.path = self.extract_path_from_url(url)
         self._assets = []
         self._links = []
         self._html = None
@@ -37,24 +39,46 @@ class Page:
             return False
         return True
 
-    def extract_resource_from_url(self, url):
-        raise NotImplementedError
+    @staticmethod
+    def extract_path_from_url(url):
+        return urlparse(url).path
 
     def __hash__(self):
         return self.url
 
     @property
     def internal_links(self):
+
         if not self._links:
-            # compute links
-            pass
+            # Get links
+            soup = BeautifulSoup(self.html, 'html.parser')
+            domain = urlparse(self.url).netloc
+            anchors = soup.find_all('a', href=re.compile(domain))
+            self._links = map(lambda anchor: anchor.href, anchors)
         return self._links
 
     @property
     def assets(self):
         if not self._assets:
-            # compute assets
-            pass
+
+            def is_asset(tag):
+                return tag.name in ['a', 'link', 'img', 'script']
+
+            def get_asset_link(tag):
+                if tag.name == "a":
+                    return tag.href
+                elif tag.name == "link":
+                    return tag.rel
+                elif tag.name == "img" or tag.name == "script":
+                    return tag.src
+                else:
+                    logging.warning("Couldn't get asset for {}".format(tag))
+
+            # Get assets
+            soup = BeautifulSoup(self.html, 'html.parser')
+            assets = soup.find_all(is_asset)
+            asset_links = map(get_asset_link, assets)
+            self._links = asset_links
         return self._assets
 
     def print_assets(self):
