@@ -57,7 +57,8 @@ class Page:
             output = re.sub("http://[/]+", "http://", link)
             return output
         # References to resource only
-        elif "http" not in link and re.match("[/.a-zA-Z0-9-]*", link) and "mailto:" not in link and "tel:" not in link:
+        elif not link.startswith("http") and not link.startswith("www") and re.match("[/.a-zA-Z0-9-]*", link) \
+                and "mailto:" not in link and "tel:" not in link:
             link = link.replace('../', '')
             link = re.sub("^/", "", link)
             return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
@@ -101,7 +102,8 @@ class Page:
             cleaned = map(lambda l: l.replace('../', ''), asset_links)
             cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
             output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
-            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http")) else "/{}".format(l),
+            formatted_output = map(lambda l: l if (l.startswith('/') or l.startswith("http") or
+                                                   l.startswith("www")) else "/{}".format(l),
                                    output)
             self._assets = set(formatted_output)
         return self._assets
