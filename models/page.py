@@ -108,7 +108,6 @@ class Page:
     def ensure_url_protocol(url):
         """If protocol not provided fallback to http"""
         if not (url.startswith('https://') or url.startswith('http://')):
-            logging.debug("Protocol not provided for {}. Falling back to http.".format(url))
             return "http://" + url
         return url
 

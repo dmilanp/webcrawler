@@ -25,25 +25,26 @@ def print_sitemap(root_page, pages):
 
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
-    logging.debug("Crawling {}".format(page.url))
     try:
         links = page.internal_links
     except eventlet.Timeout:
-        logging.warning("Fetching url {} timed out after {} seconds. Retrying.".format(page.url,
-                                                                                       Page.FETCH_TIMEOUT_SECONDS))
+        logging.warning("Timeout for url {} after {} seconds. Retrying.".format(page.url, Page.FETCH_TIMEOUT_SECONDS))
+        logging.warning("{} retries left for url {}.".format(page.retries, page.url))
         page.retries -= 1
-        pool.spawn_n(crawl, page, visited, pool)
+        if page.retries > 0:
+            pool.spawn_n(crawl, page, visited, pool)
         return
 
     visited.add(page)
 
     for link in links:
-        time.sleep(1)
+        # time.sleep(1)
         new_page = Page(link)
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
         else:
-            logging.debug("Url {} already crawled. Skipping.".format(new_page.url))
+            # logging.debug("Url {} already crawled. Skipping.".format(new_page.url))
+            pass
 
     page.print_assets()
 
