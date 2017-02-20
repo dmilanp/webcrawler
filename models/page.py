@@ -30,11 +30,7 @@ class Page:
     def __eq__(self, other):
         return self.url == other.url
 
-    def is_valid_url(self, url):
-        """Checks if url is valid"""
-        if not validators.url(self.ensure_url_protocol(url)):
-            return False
-        return True
+
 
     def has_valid_url(self):
         return self.is_valid_url(self.url)
@@ -103,6 +99,13 @@ class Page:
         return self._html
 
     @staticmethod
+    def is_valid_url(url):
+        """Checks if url is valid"""
+        if not validators.url(Page.ensure_url_protocol(url)):
+            return False
+        return True
+
+    @staticmethod
     def ensure_url_protocol(url):
         """If protocol not provided fallback to http"""
         if not (url.startswith('https://') or url.startswith('http://')):
@@ -112,5 +115,5 @@ class Page:
     @staticmethod
     def extract_path_from_url(url):
         """Returns resource part of url without domain"""
-        return urlparse(url).path
+        return urlparse(Page.ensure_url_protocol(url)).path
 

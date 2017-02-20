@@ -38,6 +38,10 @@ class TestPageClass(unittest.TestCase):
         self.assertEqual(Page("www.yoyowallet.com").url, "http://www.yoyowallet.com")
 
     def test_extract_path_from_url(self):
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com"), "")
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/?q=1"), "/")
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello?world"), "/hello")
+        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello/world?q=1"), "/hello/world")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com"), "")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/?q=1"), "/")
         self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/hello?world"), "/hello")
