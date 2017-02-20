@@ -60,7 +60,9 @@ class Page:
             soup = BeautifulSoup(self.html, 'html.parser')
             domain = urlparse(self.url).netloc
             anchors = soup.find_all('a', href=re.compile(domain))
-            links = filter(None, map(lambda anchor: anchor.href, anchors))
+            # logging.debug("Anchors found: {}".format(anchors))
+            links = filter(None, map(lambda anchor: anchor.get('href'), anchors))
+            # logging.debug("Links found: {}".format(links))
             self._links = links
         return self._links
 
@@ -73,23 +75,26 @@ class Page:
 
             def get_asset_link(tag):
                 if tag.name == "a":
-                    return tag.href
+                    return tag.get('href')
                 elif tag.name == "link":
-                    return tag.rel
+                    return tag.get('rel')
                 elif tag.name == "img" or tag.name == "script":
-                    return tag.src
+                    return tag.get('src')
                 else:
                     logging.warning("Couldn't get asset for {}".format(tag))
 
             # Get assets
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
+            logging.debug("Assets found: {}".format(assets))
             asset_links = filter(None, map(get_asset_link, assets))
             self._links = asset_links
         return self._assets
 
     def print_assets(self):
-        raise NotImplementedError
+        print "\nAssets for {} :".format(self.url)
+        for asset in self.assets:
+            print asset
 
     @property
     def html(self):
@@ -102,6 +107,7 @@ class Page:
                 self.retries -= 1
                 data = None
                 with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
+                    logging.debug("Fetching {}".format(self.url))
                     data = urllib2.urlopen(self.url).read()
 
                 if data:

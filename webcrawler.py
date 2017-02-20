@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+import time
 
 import eventlet
 
@@ -16,8 +17,10 @@ args = parser.parse_args()
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-def print_sitemap(pages):
-    raise NotImplementedError
+def print_sitemap(root_page, pages):
+    print "\nSitemap for {} :".format(root_page.url)
+    for page in pages:
+        print page.path
 
 
 def crawl(page, visited, pool):
@@ -34,6 +37,7 @@ def crawl(page, visited, pool):
         return
 
     for link in links:
+        time.sleep(1)
         new_page = Page(link)
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     crawl(root_page, visited, pool)
     pool.waitall()
 
-    print_sitemap(visited)
+    print_sitemap(root_page, visited)
 
     for page in visited:
         page.print_assets
