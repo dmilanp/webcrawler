@@ -31,10 +31,12 @@ def crawl(page, visited, pool):
         links = page.get_internal_links
     except eventlet.Timeout:
         logging.debug("Raising timeout from webcrawler")
-        logging.warning("Timeout for url {} after {} seconds. Retrying. {} retries left".format(page.url, Page.FETCH_TIMEOUT_SECONDS, page.retries_left))
+
         page.retries_left -= 1
         if page.retries_left > 0:
             pool.spawn_n(crawl, page, visited, pool)
+        else:
+            logging.warning("Couldn't fetch {} after {} retries.".format(page.url, Page.MAX_RETRIES))
         return
 
     for link in links:

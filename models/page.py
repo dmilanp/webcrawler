@@ -47,10 +47,11 @@ class Page:
     def extract_internal_link(self, link):
         tld = tldextract.extract(self.url)
         # Links containing domain
-        if "{}.{}".format(tld.domain, tld.suffix) in link:
+        if "{}.{}".format(tld.domain, tld.suffix) in link and "mailto" not in link:
             return Page.ensure_url_protocol(link)
         # References to resource only
         elif "http" not in link and re.match("[.a-zA-Z0-9-][/.a-zA-Z0-9-]*", link):
+            link = link.replace('../', '')
             return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
         else:
             return None
@@ -88,7 +89,8 @@ class Page:
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
             asset_links = filter(None, map(get_asset_link, assets))
-            self._assets = set(asset_links)
+            output = map(lambda l: l.replace('../', ''), asset_links)
+            self._assets = set(output)
         return self._assets
 
     @property
