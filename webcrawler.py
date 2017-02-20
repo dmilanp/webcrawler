@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-import time
 
 import eventlet
 
@@ -17,38 +16,38 @@ args = parser.parse_args()
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-def print_sitemap(root_page, pages):
-    print "\nSitemap for {} :".format(root_page.url)
+def print_sitemap(url, pages):
+    print "\n", "Sitemap for {} :".format(url)
     for page in pages:
-        print page.path
+        print "\t", page.path
 
 
 def crawl(page, visited, pool):
     """Crawl url, build site's map and list its assets"""
+    visited.add(page)
+
     try:
-        links = page.internal_links
+        links = page.get_internal_links
     except eventlet.Timeout:
-        logging.warning("Timeout for url {} after {} seconds. Retrying.".format(page.url, Page.FETCH_TIMEOUT_SECONDS))
-        logging.warning("{} retries left for url {}.".format(page.retries, page.url))
-        page.retries -= 1
-        if page.retries > 0:
+        logging.debug("Raising timeout from webcrawler")
+        logging.warning("Timeout for url {} after {} seconds. Retrying. {} retries left".format(page.url, Page.FETCH_TIMEOUT_SECONDS, page.retries_left))
+        page.retries_left -= 1
+        if page.retries_left > 0:
             pool.spawn_n(crawl, page, visited, pool)
         return
 
-    visited.add(page)
-
     for link in links:
-        # time.sleep(1)
         new_page = Page(link)
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
         else:
-            # logging.debug("Url {} already crawled. Skipping.".format(new_page.url))
+            # Url already crawled. Skipping.
             pass
 
     page.print_assets()
 
 if __name__ == '__main__':
+
     # Get arguments
     url = args.url
     max_threads = args.max_threads
@@ -65,8 +64,12 @@ if __name__ == '__main__':
     crawl(root_page, visited, pool)
     pool.waitall()
 
-    print_sitemap(root_page, sorted(list(visited)))
+    # Print sitemap
+    print "\n", "Sitemap for {} :".format(root_page.url)
+    for page in sorted(list(visited)):
+        print "\t", page.path
 
-    # for page in visited:
-    #     page.print_assets()
+    # Print assets for each page
+    for page in visited:
+        page.print_assets()
 

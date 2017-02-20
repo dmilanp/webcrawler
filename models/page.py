@@ -21,9 +21,10 @@ class Page:
         self._assets = None
         self._links = None
         self._html = None
-        self.retries = Page.MAX_RETRIES
+        self.retries_left = Page.MAX_RETRIES
 
     def __hash__(self):
+        """The uniqueness of a page is defined by its url"""
         return hash(self.url)
 
     def __eq__(self, other):
@@ -33,15 +34,15 @@ class Page:
         return self.is_valid_url(self.url)
 
     def print_assets(self):
-        print "\nAssets for {} :".format(self.url)
-        for asset in self.assets:
+        """Prints links embedded in the following tags in its html: a, img, script, link"""
+        print "\n", "Assets for {} :".format(self.url)
+        for asset in self.get_assets:
             print "\t", asset
 
     @property
-    def internal_links(self):
-
+    def get_internal_links(self):
+        """Prints links to pages in same domain as self"""
         if not self._links:
-
             def get_internal_link(tag):
                 link = tag.get('href')
                 if link:
@@ -52,19 +53,17 @@ class Page:
                 else:
                     return None
 
-            # Get links
+            # Extract links
             soup = BeautifulSoup(self.html, 'html.parser')
-            domain = urlparse(self.url).netloc
             anchors = soup.find_all('a')
             links = filter(None, map(get_internal_link, anchors))
-            # logging.debug("Links found: {}".format(links))
             self._links = set(links)
         return self._links
 
     @property
-    def assets(self):
+    def get_assets(self):
+        """Prints links embedded in its following tags: a, img, script, link"""
         if not self._assets:
-
             def is_asset(tag):
                 return tag.name in ['a', 'link', 'img', 'script']
 
@@ -74,7 +73,7 @@ class Page:
                 elif tag.name == "img" or tag.name == "script":
                     return tag.get('src')
 
-            # Get assets
+            # Extract assets
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
             asset_links = filter(None, map(get_asset_link, assets))
@@ -83,25 +82,18 @@ class Page:
 
     @property
     def html(self):
+        """Fetches html contents of self.url"""
         if not self._html:
-            # Adhere to number of retries specified
-            if self.retries == 0:
-                logging.warning("Ran out of attempts for url {}".format(self.url))
-                self._html = ""
-            else:
-                self.retries -= 1
-                data = None
-                with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
-                    try:
-                        data = urllib2.urlopen(self.url).read()
-                    except urllib2.HTTPError:
-                        logging.debug("HTTP request failed for url {}".format(self.url))
-
-                if data:
-                    self._html = data
-                else:
-                    self._html = ""
-
+            data = ""
+            with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
+                try:
+                    data = urllib2.urlopen(self.url).read()
+                except urllib2.HTTPError:
+                    logging.debug("HTTP request failed for url {}".format(self.url))
+                except eventlet.Timeout as t:
+                    logging.debug("Raising timeout from page")
+                    raise t
+            self._html = data
         return self._html
 
     @staticmethod
@@ -120,5 +112,6 @@ class Page:
 
     @staticmethod
     def extract_path_from_url(url):
+        """Returns resource part of url without domain"""
         return urlparse(url).path
 
