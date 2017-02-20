@@ -93,7 +93,8 @@ class Page:
             soup = BeautifulSoup(self.html, 'html.parser')
             assets = soup.find_all(is_asset)
             asset_links = filter(None, map(get_asset_link, assets))
-            output = map(lambda l: l.replace('../', ''), asset_links)
+            cleaned = map(lambda l: l.replace('../', ''), asset_links)
+            output = filter(lambda l: not l.startswith('?'), cleaned)
             self._assets = set(output)
         return self._assets
 
