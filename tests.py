@@ -27,17 +27,18 @@ class TestPageClass(unittest.TestCase):
         self.assertTrue(Page("www.yoyowallet.com").has_valid_url())
         self.assertTrue(Page("http://www.yoyowallet.com").has_valid_url())
         self.assertTrue(Page("https://www.yoyowallet.com").has_valid_url())
+        self.assertTrue(Page("hello.bye").has_valid_url())
         self.assertFalse(Page("ftp://www.yoyowallet.com.1").has_valid_url())
         self.assertFalse(Page("www.yoyowallet.com.1").has_valid_url())
-        self.assertFalse(Page("hello.bye").has_valid_url())
 
     def test_ensure_protocol(self):
         self.assertEqual(Page.ensure_url_protocol("www.yoyowallet.com"), "http://www.yoyowallet.com")
+        self.assertEqual(Page("www.yoyowallet.com").url, "http://www.yoyowallet.com")
 
-    def test_extract_resource_from_url(self):
-        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/?q=1"), "/")
-        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello?world"), "/hello")
-        self.assertEqual(Page.extract_path_from_url("www.yoyowallet.com/hello/world?q=1"), "/hello/world")
+    def test_extract_path_from_url(self):
+        self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/?q=1"), "/")
+        self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/hello?world"), "/hello")
+        self.assertEqual(Page.extract_path_from_url("http://www.yoyowallet.com/hello/world?q=1"), "/hello/world")
 
     def test_internal_links(self):
         p = Page("www.yoyowallet.com")

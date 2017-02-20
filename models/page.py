@@ -47,7 +47,10 @@ class Page:
         return urlparse(url).path
 
     def __hash__(self):
-        return self.url
+        return hash(self.url)
+
+    def __eq__(self, other):
+        return self.url == other.url
 
     @property
     def internal_links(self):
@@ -90,21 +93,21 @@ class Page:
 
     @property
     def html(self):
-        # Adhere to number of retries specified
-        if self.retries == 0:
-            logging.warning("Ran out of attempts for url {}".format(page.url))
-            self._html = ""
-            return self._html
-        self.retries -= 1
+        if not self._html:
+            # Adhere to number of retries specified
+            if self.retries == 0:
+                logging.warning("Ran out of attempts for url {}".format(self.url))
+                self._html = ""
+            else:
+                self.retries -= 1
+                data = None
+                with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
+                    data = urllib2.urlopen(self.url).read()
 
-        data = None
-        with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
-            data = urllib2.urlopen(self.url).read()
-
-        if data:
-            self._html = data
-        else:
-            self._html = ""
+                if data:
+                    self._html = data
+                else:
+                    self._html = ""
 
         return self._html
 
