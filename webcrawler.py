@@ -59,6 +59,7 @@ def crawl(page, visited, pool):
 
     page.print_assets()
 
+
 if __name__ == '__main__':
 
     if soft:

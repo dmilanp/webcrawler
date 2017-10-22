@@ -38,12 +38,27 @@ class Page:
     def has_valid_url(self):
         return is_valid_url(self.url)
 
-    def print_assets(self):
-        """Prints references inside tags: a, img, script, link"""
-        print '\n', 'Assets for {} :'.format(self.url)
-        for asset in sorted(list(self.extract_assets)):
-            print '\t', asset
-        print '\n'
+    def get_html(self):
+        """Fetches html contents of self.url"""
+        if not self._html:
+            data = ''
+
+            with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
+                try:
+                    data = urllib2.urlopen(self.url).read()
+                except urllib2.HTTPError:
+                    logging.debug('HTTP request failed for url {}'.format(self.url))
+                except eventlet.Timeout as t:
+                    logging.debug('Timeout crawling {}. Retrying.'.format(self.url))
+                    raise t
+                except urllib2.URLError:
+                    logging.debug('Error opening URL {}'.format(self.url))
+                except:
+                    pass
+
+            self._html = data
+
+        return self._html
 
     def extract_internal_links(self):
         # type: (Page) -> set
@@ -85,27 +100,12 @@ class Page:
 
         return self._assets
 
-    def get_html(self):
-        """Fetches html contents of self.url"""
-        if not self._html:
-            data = ''
-
-            with eventlet.Timeout(Page.FETCH_TIMEOUT_SECONDS):
-                try:
-                    data = urllib2.urlopen(self.url).read()
-                except urllib2.HTTPError:
-                    logging.debug('HTTP request failed for url {}'.format(self.url))
-                except eventlet.Timeout as t:
-                    logging.debug('Timeout crawling {}. Retrying.'.format(self.url))
-                    raise t
-                except urllib2.URLError:
-                    logging.debug('Error opening URL {}'.format(self.url))
-                except:
-                    pass
-
-            self._html = data
-
-        return self._html
+    def print_assets(self):
+        """Prints references inside tags: a, img, script, link"""
+        print '\n', 'Assets for {} :'.format(self.url)
+        for asset in sorted(list(self.extract_assets)):
+            print '\t', asset
+        print '\n'
 
 
 
