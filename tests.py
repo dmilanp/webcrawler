@@ -51,12 +51,12 @@ class TestPageClass(unittest.TestCase):
     def test_internal_links(self):
         p = Page("www.yoyowallet.com")
         p._html = self.html
-        self.assertSetEqual(p.get_internal_links, {"http://www.yoyowallet.com/jobs.html"})
+        self.assertSetEqual(p.extract_internal_links, {"http://www.yoyowallet.com/jobs.html"})
 
     def test_assets(self):
         p = Page("www.yoyowallet.com")
         p._html = self.html
-        self.assertSetEqual(p.get_assets, {"www.yoyowallet.com/jobs.html", "www.twitter.com/yoyowallet",
+        self.assertSetEqual(p.extract_assets, {"www.yoyowallet.com/jobs.html", "www.twitter.com/yoyowallet",
                                            "www.facebook.com/logo.jpg", "www.yoyowallet.com/drawer.js"})
 
 

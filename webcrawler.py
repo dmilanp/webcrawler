@@ -40,7 +40,7 @@ def crawl(page, visited, pool):
         time.sleep(random.random())
 
     try:
-        links = page.get_internal_links
+        links = page.extract_internal_links()
     except eventlet.Timeout:
         page.retries_left -= 1
         if page.retries_left > 0:
@@ -65,19 +65,17 @@ if __name__ == '__main__':
         logging.info("Soft mode enabled.")
     logging.info("Using pool of {} threads.".format(max_threads))
 
-    # Set root URL
     root_page = Page(url)
-    if not root_page.has_valid_url():
+    if not root_page.has_valid_url:
         logging.error("Url {} is not valid".format(root_page.url))
         exit(1)
 
-    # Perform crawling
+    # Crawl
     visited = set()
     pool = eventlet.GreenPool(size=max_threads)
     crawl(root_page, visited, pool)
     pool.waitall()
 
-    # Print sitemap
     print "\n", "Sitemap for {} :".format(root_page.url)
     for page in sorted(list(visited)):
         if page.path:

@@ -4,7 +4,7 @@ import tldextract
 import validators
 
 
-def domain_for(url):
+def domain_for_url(url):
     tld = tldextract.extract(url)
     return "{}.{}".format(tld.domain, tld.suffix)
 
