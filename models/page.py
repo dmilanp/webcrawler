@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 import eventlet
 from eventlet.green import urllib2
 
-from models.helpers import ensure_url_protocol, extract_path_from_url, domain_for_url, is_valid_url
+from models.helpers import ensure_url_protocol, extract_path_from_url, domain_for_url, is_valid_url, \
+    link_from_domain_or_none
 
 logging.getLogger(__name__)
 
@@ -38,37 +39,14 @@ class Page:
         return is_valid_url(self.url)
 
     def print_assets(self):
-        """Prints links embedded in the following tags in its html: a, img, script, link"""
+        """Prints references inside tags: a, img, script, link"""
         print '\n', 'Assets for {} :'.format(self.url)
         for asset in sorted(list(self.extract_assets)):
             print '\t', asset
         print '\n'
 
-    def extract_internal_link(self, link):
-        """If link is to same domain this returns it well formatted, otherwise returns None"""
-        if self.domain in link and 'mailto' not in link:
-            # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
-
-            if not self.domain == Page(link).domain:
-                return None
-
-            link = ensure_url_protocol(link)
-
-            # Clean multiple slashes
-            output = re.sub('http://[/]+', 'http://', link)
-            return output
-
-        # References to resource only
-        elif not link.startswith('http') and not link.startswith('www') and re.match('[/.a-zA-Z0-9-]*', link) \
-                and 'mailto:' not in link and 'tel:' not in link:
-            link = link.replace('../', '')
-            link = re.sub('^/', '', link)
-            return ensure_url_protocol(urlparse(self.url).netloc) + '/' + link
-        else:
-            return None
-
     def extract_internal_links(self):
-        """Prints links to pages in same domain as self"""
+        # type: (Page) -> set
         if not self._internal_links:
             soup = BeautifulSoup(self.get_html(), 'html.parser')
             anchors = soup.find_all('a')
@@ -76,16 +54,17 @@ class Page:
 
             for anchor in anchors:
                 href = anchor.get('href')
-                internal_link = self.extract_internal_link(href)
+                internal_link = link_from_domain_or_none(href, self.domain)
                 internal_link_with_protocol = ensure_url_protocol(internal_link)
-                internal_links.add(internal_link_with_protocol)
+
+                if internal_link_with_protocol:
+                    internal_links.add(internal_link_with_protocol)
 
             self._internal_links = internal_links
 
         return self._internal_links
 
     def extract_assets(self):
-        """Prints links embedded in its following tags: a, img, script, link"""
         if not self._assets:
             def is_asset(tag):
                 return tag.name in ['a', 'link', 'img', 'script']
@@ -113,6 +92,7 @@ class Page:
             cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
             output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
             formatted_output = map(prepare_asset, output)
+
             self._assets = set(formatted_output)
 
         return self._assets
