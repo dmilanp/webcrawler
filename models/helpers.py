@@ -55,3 +55,25 @@ def link_from_domain_or_none(link, domain):
         return ensure_url_protocol(
             urlparse(domain).netloc + '/' + link
         )
+
+
+def is_asset(tag):
+    return tag.name in ['a', 'link', 'img', 'script']
+
+
+def get_asset_link(tag):
+    if tag.name == 'a' or tag.name == 'link':
+        return tag.get('href')
+    elif tag.name == 'img' or tag.name == 'script':
+        return tag.get('src')
+
+
+def prepare_asset(asset, url):
+    parsed_url = urlparse(url)
+    if asset.startswith('www'):
+        return ensure_url_protocol(asset)
+    elif asset.startswith('http'):
+        return asset
+    elif asset.startswith('/'):
+        asset = re.sub('^/', '', asset)
+        return '{}/{}'.format(parsed_url.netloc, asset)

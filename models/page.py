@@ -8,7 +8,7 @@ import eventlet
 from eventlet.green import urllib2
 
 from models.helpers import ensure_url_protocol, extract_path_from_url, domain_for_url, is_valid_url, \
-    link_from_domain_or_none
+    link_from_domain_or_none, is_asset, get_asset_link, prepare_asset
 
 logging.getLogger(__name__)
 
@@ -66,34 +66,22 @@ class Page:
 
     def extract_assets(self):
         if not self._assets:
-            def is_asset(tag):
-                return tag.name in ['a', 'link', 'img', 'script']
-
-            def get_asset_link(tag):
-                if tag.name == 'a' or tag.name == 'link':
-                    return tag.get('href')
-                elif tag.name == 'img' or tag.name == 'script':
-                    return tag.get('src')
-
-            def prepare_asset(asset):
-                if asset.startswith('www'):
-                    return ensure_url_protocol(asset)
-                elif asset.startswith('http'):
-                    return asset
-                elif asset.startswith('/'):
-                    asset = re.sub('^/', '', asset)
-                return '{}/{}'.format(self.url, asset)
-
-            # Extract assets
             soup = BeautifulSoup(self.get_html(), 'html.parser')
             assets = soup.find_all(is_asset)
-            asset_links = filter(None, map(get_asset_link, assets))
-            cleaned = map(lambda l: l.replace('../', ''), asset_links)
-            cleaned = map(lambda l: re.sub('^//', '/', l), cleaned)
-            output = filter(lambda l: not l.startswith('?') and not l.startswith('#'), cleaned)
-            formatted_output = map(prepare_asset, output)
+            output_assets = set()
 
-            self._assets = set(formatted_output)
+            for asset in assets:
+                asset_link = get_asset_link(asset)
+                cleaned = asset_link.replace('../', '')
+                cleaned = re.sub('^//', '/', cleaned)
+
+                if cleaned.startswith('?') or cleaned.startswith('#'):
+                    continue
+
+                formatted_output = prepare_asset(cleaned)
+                output_assets.add(formatted_output)
+
+            self._assets = output_assets
 
         return self._assets
 
