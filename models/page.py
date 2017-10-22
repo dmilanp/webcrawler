@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 import logging
-from urlparse import urlparse
 import re
 
 from bs4 import BeautifulSoup
 import eventlet
 from eventlet.green import urllib2
 
-from models.helpers import ensure_url_protocol, extract_path_from_url, domain_for_url, is_valid_url, \
-    link_from_domain_or_none, is_asset, get_asset_link, prepare_asset
+from models.url_helpers import (
+    ensure_url_protocol,
+    extract_path_from_url,
+    domain_for_url,
+    is_valid_url,
+    link_from_domain_or_none,
+    is_asset,
+    get_asset_link,
+    prepare_asset
+)
 
 logging.getLogger(__name__)
 
