@@ -4,11 +4,10 @@ from urlparse import urlparse
 import re
 
 from bs4 import BeautifulSoup
-import tldextract
 import eventlet
 from eventlet.green import urllib2
-import validators
 
+from models.helpers import ensure_url_protocol, extract_path_from_url, domain_for, is_valid_url
 
 logging.getLogger(__name__)
 
@@ -20,9 +19,9 @@ class Page:
 
     def __init__(self, url):
         # Always store url with scheme
-        self.url = self.ensure_url_protocol(url)
-        self.path = self.extract_path_from_url(url)
-        self.domain = self.domain_for(self.url)
+        self.url = ensure_url_protocol(url)
+        self.path = extract_path_from_url(url)
+        self.domain = domain_for(self.url)
         self._assets = None
         self._links = None
         self._html = None
@@ -36,7 +35,7 @@ class Page:
         return self.url == other.url
 
     def has_valid_url(self):
-        return self.is_valid_url(self.url)
+        return is_valid_url(self.url)
 
     def print_assets(self):
         """Prints links embedded in the following tags in its html: a, img, script, link"""
@@ -52,7 +51,7 @@ class Page:
             # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
             if not self.domain == Page(link).domain:
                 return None
-            link = Page.ensure_url_protocol(link)
+            link = ensure_url_protocol(link)
             # Clean multiple slashes
             output = re.sub("http://[/]+", "http://", link)
             return output
@@ -61,7 +60,7 @@ class Page:
                 and "mailto:" not in link and "tel:" not in link:
             link = link.replace('../', '')
             link = re.sub("^/", "", link)
-            return Page.ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
+            return ensure_url_protocol(urlparse(self.url).netloc) + "/" + link
         else:
             return None
 
@@ -75,9 +74,9 @@ class Page:
             href = filter(None, map(lambda tag: tag.get('href'), anchors))
             internal_links = filter(None, map(self.extract_internal_link, href))
             # Work with fully qualified links, with scheme
-            links = map(Page.ensure_url_protocol, internal_links)
+            links = map(ensure_url_protocol, internal_links)
             # Clean paths
-            output = map(lambda l: urlparse(l).scheme + "://" + urlparse(l).netloc + Page.extract_path_from_url(l),
+            output = map(lambda l: urlparse(l).scheme + "://" + urlparse(l).netloc + extract_path_from_url(l),
                          links)
             self._links = set(output)
         return self._links
@@ -97,7 +96,7 @@ class Page:
 
             def prepare_asset(asset):
                 if asset.startswith('www'):
-                    return self.ensure_url_protocol(asset)
+                    return ensure_url_protocol(asset)
                 elif asset.startswith('http'):
                     return asset
                 elif asset.startswith('/'):
@@ -135,27 +134,5 @@ class Page:
             self._html = data
         return self._html
 
-    @staticmethod
-    def domain_for(url):
-        tld = tldextract.extract(url)
-        return "{}.{}".format(tld.domain, tld.suffix)
 
-    @staticmethod
-    def is_valid_url(url):
-        """Checks if url is valid"""
-        if not validators.url(Page.ensure_url_protocol(url)):
-            return False
-        return True
-
-    @staticmethod
-    def ensure_url_protocol(url):
-        """If protocol not provided fallback to http"""
-        if not (url.startswith('https://') or url.startswith('http://')):
-            return "http://" + url
-        return url
-
-    @staticmethod
-    def extract_path_from_url(url):
-        """Returns resource part of url without domain"""
-        return urlparse(Page.ensure_url_protocol(url)).path
 
