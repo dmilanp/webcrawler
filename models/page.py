@@ -22,7 +22,7 @@ class Page:
         self.path = extract_path_from_url(url)
         self.domain = domain_for_url(self.url)
         self._assets = None
-        self._links = None
+        self._internal_links = None
         self._html = None
         self.retries_left = Page.MAX_RETRIES
 
@@ -46,15 +46,18 @@ class Page:
 
     def extract_internal_link(self, link):
         """If link is to same domain this returns it well formatted, otherwise returns None"""
-        # Links containing domain
         if self.domain in link and 'mailto' not in link:
             # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
+
             if not self.domain == Page(link).domain:
                 return None
+
             link = ensure_url_protocol(link)
+
             # Clean multiple slashes
             output = re.sub('http://[/]+', 'http://', link)
             return output
+
         # References to resource only
         elif not link.startswith('http') and not link.startswith('www') and re.match('[/.a-zA-Z0-9-]*', link) \
                 and 'mailto:' not in link and 'tel:' not in link:
@@ -66,20 +69,20 @@ class Page:
 
     def extract_internal_links(self):
         """Prints links to pages in same domain as self"""
-        if not self._links:
-            # Extract links
+        if not self._internal_links:
             soup = BeautifulSoup(self.get_html(), 'html.parser')
             anchors = soup.find_all('a')
-            href = filter(None, map(lambda tag: tag.get('href'), anchors))
-            internal_links = filter(None, map(self.extract_internal_link, href))
-            # Work with fully qualified links, with scheme
-            links = map(ensure_url_protocol, internal_links)
-            # Clean paths
-            output = map(lambda l: urlparse(l).scheme + '://' + urlparse(l).netloc + extract_path_from_url(l),
-                         links)
-            self._links = set(output)
+            internal_links = set()
 
-        return self._links
+            for anchor in anchors:
+                href = anchor.get('href')
+                internal_link = self.extract_internal_link(href)
+                internal_link_with_protocol = ensure_url_protocol(internal_link)
+                internal_links.add(internal_link_with_protocol)
+
+            self._internal_links = internal_links
+
+        return self._internal_links
 
     def extract_assets(self):
         """Prints links embedded in its following tags: a, img, script, link"""
