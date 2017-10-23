@@ -71,7 +71,6 @@ if __name__ == '__main__':
         logging.error("Url {} is not valid".format(root_page.url))
         exit(1)
 
-    # Crawl
     visited = set()
     pool = eventlet.GreenPool(size=max_threads)
     crawl(root_page, visited, pool)
