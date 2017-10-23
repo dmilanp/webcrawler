@@ -7,14 +7,14 @@ import eventlet
 from eventlet.green import urllib2
 
 from models.url_helpers import (
-    ensure_url_protocol,
-    extract_path_from_url,
-    domain_for_url,
+    ensure_http_scheme,
+    url_path,
+    top_level_domain,
     is_valid_url,
     link_from_domain_or_none,
-    is_asset,
-    get_asset_link,
-    prepare_asset
+    is_relevant_asset,
+    get_link_from_asset,
+    build_asset_url
 )
 
 logging.getLogger(__name__)
@@ -26,9 +26,9 @@ class Page:
     MAX_RETRIES = 3
 
     def __init__(self, url):
-        self.url = ensure_url_protocol(url)
-        self.path = extract_path_from_url(url)
-        self.domain = domain_for_url(self.url)
+        self.url = ensure_http_scheme(url)
+        self.path = url_path(url)
+        self.domain = top_level_domain(self.url)
         self._assets = None
         self._internal_links = None
         self._html = None
@@ -77,7 +77,7 @@ class Page:
             for anchor in anchors:
                 href = anchor.get('href')
                 internal_link = link_from_domain_or_none(href, self.domain)
-                internal_link_with_protocol = ensure_url_protocol(internal_link)
+                internal_link_with_protocol = ensure_http_scheme(internal_link)
 
                 if internal_link_with_protocol:
                     internal_links.add(internal_link_with_protocol)
@@ -89,18 +89,18 @@ class Page:
     def extract_assets(self):
         if not self._assets:
             soup = BeautifulSoup(self.get_html(), 'html.parser')
-            assets = soup.find_all(is_asset)
+            assets = soup.find_all(is_relevant_asset)
             output_assets = set()
 
             for asset in assets:
-                asset_link = get_asset_link(asset)
+                asset_link = get_link_from_asset(asset)
                 cleaned = asset_link.replace('../', '')
                 cleaned = re.sub('^//', '/', cleaned)
 
                 if cleaned.startswith('?') or cleaned.startswith('#'):
                     continue
 
-                formatted_output = prepare_asset(cleaned)
+                formatted_output = build_asset_url(cleaned)
                 output_assets.add(formatted_output)
 
             self._assets = output_assets
