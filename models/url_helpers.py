@@ -67,8 +67,11 @@ def build_asset_url(asset, url):
     _url = ensure_http_scheme(url)
     parsed_url = urlparse(_url)
 
+    if re.match(r'^[a-zA-Z\.]+$', asset):
+        asset = '/{}'.format(asset)
+
     if asset.startswith('/'):
         asset = re.sub('^/', '', asset)
-        return '{}/{}'.format(parsed_url.netloc, asset)
+        return ensure_http_scheme('{}/{}'.format(parsed_url.netloc, asset))
 
     return ensure_http_scheme(asset)

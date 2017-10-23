@@ -124,11 +124,17 @@ def test_link_from_domain_or_none():
         print case
         assert url_helpers.link_from_domain_or_none(case[0], case[1]) == case[2]
 
-def test_is_relevant_asset():
-    pass
-
-def test_get_link_from_asset():
-    pass
 
 def test_build_asset_url():
-    pass
+    cases = (
+        ('/home.js', 'www.test.com', 'http://www.test.com/home.js'),
+        ('/home.js', 'test.com', 'http://test.com/home.js'),
+        ('/home.js', 'http://www.test.com', 'http://www.test.com/home.js'),
+        ('/home.js', 'https://www.test.com', 'http://www.test.com/home.js'),
+        ('index.html', 'www.test.com', 'http://www.test.com/index.html'),
+        ('index.html', 'test.com', 'http://test.com/index.html'),
+        ('index.html', 'http://www.test.com', 'http://www.test.com/index.html'),
+        ('index.html', 'https://www.test.com', 'http://www.test.com/index.html'),
+    )
+    for case in cases:
+        assert url_helpers.build_asset_url(case[0], case[1]) == case[2]
