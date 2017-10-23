@@ -121,7 +121,6 @@ def test_link_from_domain_or_none():
         ('https://www.test.com', 'http://www.test.com', 'https://www.test.com'),
     )
     for case in cases:
-        print case
         assert url_helpers.link_from_domain_or_none(case[0], case[1]) == case[2]
 
 
