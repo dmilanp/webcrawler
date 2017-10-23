@@ -1,16 +1,6 @@
 import url_helpers
 from models.page import Page
 
-test_html = """
-<html>
-    <body>
-        <a href="www.yoyowallet.com/jobs.html">
-        <a href="www.twitter.com/yoyowallet">
-        <img src="www.facebook.com/logo.jpg">
-    </body>
-    <script src="www.yoyowallet.com/drawer.js">
-</html>
-"""
 
 def test_pages_set():
     pages = set()

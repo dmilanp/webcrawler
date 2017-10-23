@@ -46,6 +46,7 @@ class Page:
         return is_valid_url(self.url)
 
     def get_html(self):
+        # type: () -> str
         """Fetches html contents of self.url"""
         if not self._html:
             data = ''
@@ -68,7 +69,7 @@ class Page:
         return self._html
 
     def extract_internal_links(self):
-        # type: (Page) -> set
+        # type: () -> set
         if not self._internal_links:
             soup = BeautifulSoup(self.get_html(), 'html.parser')
             anchors = soup.find_all('a')
@@ -87,6 +88,7 @@ class Page:
         return self._internal_links
 
     def extract_assets(self):
+        # type: () -> set
         if not self._assets:
             soup = BeautifulSoup(self.get_html(), 'html.parser')
             assets = soup.find_all(is_relevant_asset)
@@ -112,6 +114,7 @@ class Page:
         return self._assets
 
     def print_assets(self):
+        # type: () -> None
         """Prints references inside tags: a, img, script, link"""
         print '\n', 'Assets for {} :'.format(self.url)
         for asset in sorted(list(self.extract_assets())):
