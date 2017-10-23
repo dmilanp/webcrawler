@@ -94,13 +94,17 @@ class Page:
 
             for asset in assets:
                 asset_link = get_link_from_asset(asset)
+
+                if not asset_link:
+                    continue
+
                 cleaned = asset_link.replace('../', '')
                 cleaned = re.sub('^//', '/', cleaned)
 
                 if cleaned.startswith('?') or cleaned.startswith('#'):
                     continue
 
-                formatted_output = build_asset_url(cleaned)
+                formatted_output = build_asset_url(cleaned, self.url)
                 output_assets.add(formatted_output)
 
             self._assets = output_assets
@@ -110,7 +114,7 @@ class Page:
     def print_assets(self):
         """Prints references inside tags: a, img, script, link"""
         print '\n', 'Assets for {} :'.format(self.url)
-        for asset in sorted(list(self.extract_assets)):
+        for asset in sorted(list(self.extract_assets())):
             print '\t', asset
         print '\n'
 

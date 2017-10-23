@@ -14,8 +14,8 @@ test_html = """
 
 def test_pages_set():
     pages = set()
-    pages.add(Page('www.yoyowallet.com'))
-    pages.add(Page('www.yoyowallet.com'))
+    pages.add(Page('www.test.com'))
+    pages.add(Page('www.test.com'))
     assert len(pages) == 1
 
 def test_top_level_domain():
