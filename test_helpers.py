@@ -1,5 +1,5 @@
+import url_helpers
 from models.page import Page
-from models import url_helpers
 
 test_html = """
 <html>

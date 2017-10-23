@@ -2,11 +2,11 @@
 import logging
 import re
 
-from bs4 import BeautifulSoup
 import eventlet
+from bs4 import BeautifulSoup
 from eventlet.green import urllib2
 
-from models.url_helpers import (
+from url_helpers import (
     ensure_http_scheme,
     url_path,
     top_level_domain,

@@ -44,7 +44,7 @@ def link_from_domain_or_none(link, domain):
     tld = top_level_domain(domain)
 
     _link = re.sub('^[\./]+', '', link)
-    
+
     if tld in urlparse(ensure_http_scheme(_link)).netloc:
 
         # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
