@@ -101,24 +101,24 @@ def test_link_from_domain_or_none():
         ('tel:123451234', 'test.com', None),
         #
         ('www.test.com', 'subdomain.test.com', 'http://www.test.com'),
-        ('test.com', 'subdomain.test.com', 'http://www.test.com'),
+        ('test.com', 'subdomain.test.com', 'http://test.com'),
         ('http://www.test.com', 'subdomain.test.com', 'http://www.test.com'),
-        ('https://www.test.com', 'subdomain.test.com', 'http://www.test.com'),
+        ('https://www.test.com', 'subdomain.test.com', 'https://www.test.com'),
         #
         ('www.test.com', 'test.com', 'http://www.test.com'),
-        ('test.com', 'test.com', 'http://www.test.com'),
+        ('test.com', 'test.com', 'http://test.com'),
         ('http://www.test.com', 'test.com', 'http://www.test.com'),
-        ('https://www.test.com', 'test.com', 'http://www.test.com'),
+        ('https://www.test.com', 'test.com', 'https://www.test.com'),
         #
         ('www.test.com', 'www.test.com', 'http://www.test.com'),
-        ('test.com', 'www.test.com', 'http://www.test.com'),
+        ('test.com', 'www.test.com', 'http://test.com'),
         ('http://www.test.com', 'www.test.com', 'http://www.test.com'),
-        ('https://www.test.com', 'www.test.com', 'http://www.test.com'),
+        ('https://www.test.com', 'www.test.com', 'https://www.test.com'),
         #
         ('www.test.com', 'http://www.test.com', 'http://www.test.com'),
-        ('test.com', 'http://www.test.com', 'http://www.test.com'),
+        ('test.com', 'http://www.test.com', 'http://test.com'),
         ('http://www.test.com', 'http://www.test.com', 'http://www.test.com'),
-        ('https://www.test.com', 'http://www.test.com', 'http://www.test.com'),
+        ('https://www.test.com', 'http://www.test.com', 'https://www.test.com'),
     )
     for case in cases:
         print case

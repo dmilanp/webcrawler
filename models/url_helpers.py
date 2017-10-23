@@ -43,14 +43,13 @@ def link_from_domain_or_none(link, domain):
 
     tld = top_level_domain(domain)
 
-    if tld not in urlparse(ensure_http_scheme(link)).netloc:
+    _link = re.sub('^[\./]+', '', link)
+
+    if tld in urlparse(ensure_http_scheme(_link)).netloc:
         # Guard cases like https://plus.google.com/share?url=http%3A%2F%2Fwww.headspace.com
-        return None
+        return ensure_http_scheme(_link)
     else:
-        _link = re.sub('[\./]+', '', link)
-        return ensure_http_scheme(
-            urlparse(domain).netloc + '/' + _link
-        )
+        return None
 
 
 def is_relevant_asset(tag):
