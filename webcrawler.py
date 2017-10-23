@@ -20,21 +20,20 @@ args = parser.parse_args()
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-# Get arguments
 url = args.url
 max_threads = args.max_threads
 soft = args.soft
 
 
 def print_sitemap(url, pages):
-    print "\n", "Sitemap for {} :".format(url)
+    print '\n', 'Sitemap for {} :'.format(url)
     for page in pages:
-        print "\t", page.path
+        print '\t', page.path
 
 
 def crawl(page, visited, pool):
-    """Crawl url, build site's map and list its assets"""
-    logging.info("Crawling {}".format(page.url))
+    """Crawl url, build site's map and list assets"""
+    logging.info('Crawling {}'.format(page.url))
     visited.add(page)
     if soft:
         time.sleep(random.random())
@@ -46,7 +45,7 @@ def crawl(page, visited, pool):
         if page.retries_left > 0:
             pool.spawn_n(crawl, page, visited, pool)
         else:
-            logging.warning("Couldn't fetch {} after {} retries.".format(page.url, Page.MAX_RETRIES))
+            logging.warning('Couldn\'t fetch {} after {} retries.'.format(page.url, Page.MAX_RETRIES))
         return
 
     for link in links:
@@ -54,7 +53,7 @@ def crawl(page, visited, pool):
         if new_page not in visited:
             pool.spawn_n(crawl, new_page, visited, pool)
         else:
-            # Url already crawled.
+            # Url already crawled
             pass
 
     page.print_assets()
@@ -63,12 +62,12 @@ def crawl(page, visited, pool):
 if __name__ == '__main__':
 
     if soft:
-        logging.info("Soft mode enabled.")
-    logging.info("Using pool of {} threads.".format(max_threads))
+        logging.info('Soft mode enabled.')
+    logging.info('Using pool of {} threads.'.format(max_threads))
 
     root_page = Page(url)
     if not root_page.has_valid_url:
-        logging.error("Url {} is not valid".format(root_page.url))
+        logging.error('Url {} is not valid'.format(root_page.url))
         exit(1)
 
     visited = set()
@@ -76,7 +75,7 @@ if __name__ == '__main__':
     crawl(root_page, visited, pool)
     pool.waitall()
 
-    print "\n", "Sitemap for {} :".format(root_page.url)
+    print '\n', 'Sitemap for {} :'.format(root_page.url)
     for page in sorted(list(visited)):
         if page.path:
-            print "\t", page.path
+            print '\t', page.path

@@ -9,7 +9,7 @@ def top_level_domain(url):
     # type: (str) -> str
     _url = ensure_http_scheme(url)
     tld = tldextract.extract(_url)
-    return "{}.{}".format(tld.domain, tld.suffix)
+    return '{}.{}'.format(tld.domain, tld.suffix)
 
 
 def url_path(url):
@@ -33,12 +33,12 @@ def ensure_http_scheme(url):
     elif url.startswith('http'):
         return url
     else:
-        return "http://" + url
+        return 'http://' + url
 
 
 def link_from_domain_or_none(link, domain):
     """If link is to same domain this returns it well formatted, otherwise returns None"""
-    if link is None or 'mailto:' in link or 'tel:' in link:
+    if not link or 'mailto:' in link or 'tel:' in link or link == '/':
         return None
 
     tld = top_level_domain(domain)
