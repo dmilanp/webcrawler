@@ -5,7 +5,7 @@ enum34==1.1.6
 eventlet==0.20.1
 greenlet==0.4.12
 idna==2.2
-requests==2.13.0
+requests==2.20.0
 requests-file==1.4.1
 six==1.10.0
 tldextract==2.0.2
